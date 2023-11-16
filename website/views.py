@@ -6,10 +6,28 @@ from .forms import SignUpForm
 
 def home(request):
     #Check to see if logging in
+    # if request.method == 'POST':
+    #     username = request.POST['username']
+    #     password = request.POST['password']
+    #     #Authenticate
+    #     user = authenticate(request, username=username, password=password)
+    #     if user is not None:
+    #         login(request, user)
+    #         messages.success(request, "You've been logged in!")
+    #         return redirect('home')
+    #     else:
+    #         messages.success(request, "There was an error logging in, please, try again")
+    #         return redirect('home')
+    # else:
+    return render(request, 'home.html', {})
+
+
+def login_user(request):
+    # Check to see if logging in
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
-        #Authenticate
+        # Authenticate
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
@@ -17,27 +35,9 @@ def home(request):
             return redirect('home')
         else:
             messages.success(request, "There was an error logging in, please, try again")
-            return redirect('home')
+            return redirect('login')
     else:
-        return render(request, 'home.html', {})
-
-
-# def login_user(request):
-#     # Check to see if logging in
-#     if request.method == 'POST':
-#         username = request.POST['username']
-#         password = request.POST['password']
-#         # Authenticate
-#         user = authenticate(request, username=username, password=password)
-#         if user is not None:
-#             login(request, user)
-#             messages.success(request, "You've been logged in!")
-#             return redirect('home')
-#         else:
-#             messages.success(request, "There was an error logging in, please, try again")
-#             return redirect('login')
-#     else:
-#         return render(request, 'login.html', {})
+        return render(request, 'login.html', {})
 
 
 def logout_user(request):
