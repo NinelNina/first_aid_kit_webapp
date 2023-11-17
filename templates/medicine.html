@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1>{{ medicine.medicine_name }}</h1>
+    <h3>Инструкция по применению</h3>
+    <br/>
+    {{ medicine.medicine_descr | safe }}
+    <br/>
+    <a href="{% url 'home' %}" class="btn btn-secondary">Назад</a>
+{% endblock %}

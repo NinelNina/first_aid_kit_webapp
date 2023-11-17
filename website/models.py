@@ -18,8 +18,8 @@ class Disease(models.Model):
 
 
 class DiseaseCatalog(models.Model):
-    id_disease = models.OneToOneField(Disease, models.DO_NOTHING, db_column='id_disease', primary_key=True)  # The composite primary key (id_disease, id_symptom) found, that is not supported. The first column is selected.
-    id_symptom = models.ForeignKey('Symptom', models.DO_NOTHING, db_column='id_symptom')
+    id_disease = models.OneToOneField(Disease, models.CASCADE, db_column='id_disease', primary_key=True)  # The composite primary key (id_disease, id_symptom) found, that is not supported. The first column is selected.
+    id_symptom = models.ForeignKey('Symptom', models.CASCADE, db_column='id_symptom')
 
     class Meta:
         managed = True
@@ -29,8 +29,11 @@ class DiseaseCatalog(models.Model):
 
 class Firstaidkit(models.Model):
     id_firstaidkit = models.AutoField(primary_key=True)
-    id_medicine = models.ForeignKey('Medicine', models.DO_NOTHING, db_column='id_medicine')
+    id_medicine = models.ForeignKey('Medicine', models.CASCADE, db_column='id_medicine')
     expiration_date = models.DateField()
+
+    def __str__(self):
+        return f"{self.id_medicine.medicine_name} - {self.expiration_date}"
 
     class Meta:
         managed = True
@@ -38,8 +41,8 @@ class Firstaidkit(models.Model):
 
 
 class MedicationUse(models.Model):
-    id_medicine = models.OneToOneField('Medicine', models.DO_NOTHING, db_column='id_medicine', primary_key=True)  # The composite primary key (id_medicine, id_disease) found, that is not supported. The first column is selected.
-    id_disease = models.ForeignKey(Disease, models.DO_NOTHING, db_column='id_disease')
+    id_medicine = models.OneToOneField('Medicine', models.CASCADE, db_column='id_medicine', primary_key=True)  # The composite primary key (id_medicine, id_disease) found, that is not supported. The first column is selected.
+    id_disease = models.ForeignKey(Disease, models.CASCADE, db_column='id_disease')
 
     class Meta:
         managed = True

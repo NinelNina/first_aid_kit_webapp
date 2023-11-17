@@ -1,6 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django import forms
+from .models import Firstaidkit
 
 
 class SignUpForm(UserCreationForm):
@@ -28,3 +29,9 @@ class SignUpForm(UserCreationForm):
         self.fields['password2'].widget.attrs['placeholder'] = 'Подтверждение пароля'
         self.fields['password2'].label = ''
         self.fields['password2'].help_text = '<span class="form-text text-muted"><small>Введите пароль ещё раз</span>'
+
+
+class AddFirstAidKitRecord(forms.ModelForm):
+    medicine_name = forms.CharField(required=True, widget=forms.TextInput(attrs={'placeholder': 'Название лекарства', 'class': 'form-control'}), label="")
+    #medicine_name = forms.ModelChoiceField(Medicine.objects.get().medicine_name.)
+    expiration_date = forms.DateField(required=True, widget=forms.DateInput(attrs={'placeholder': 'Срок годности', 'class': 'form-control'}), label="")
