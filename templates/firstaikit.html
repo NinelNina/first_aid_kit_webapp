@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block content %}
+
+    {% if user.is_authenticated %}
+
+        <h1>Аптечка</h1>
+
+        <div class="d-flex justify-content-end">
+            <a href="{% url 'add_firstaidkit_record' %}" class="btn btn-success">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"></path>
+                </svg> Добавить новую запись</a>
+        </div>
+        <br/>
+
+        <table class="table table-hover">
+          <thead class="table-dark">
+          <tr>
+              <th scope="col">Название лекарства</th>
+              <th scope="col">Срок годности</th>
+              <th scope="col"></th>
+              <th scope="col"></th>
+          </tr>
+          </thead>
+          <tbody>
+          {% if first_aid_kit %}
+            {% for record in first_aid_kit %}
+                <tr>
+                    <td><a href="{% url 'medicine' record.id_medicine.id_medicine %}" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">{{ record.id_medicine.medicine_name }}</a></td>
+                    <td>{{ record.expiration_date }}</td>
+
+                    <td><a href="{% url 'update_firstaidkit_record' record.id_firstaidkit %}" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
+                        <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"></path>
+                        </svg> Изменить</a></td>
+
+                    <td><a class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-record-id="{{ record.id_firstaidkit }}" data-medicine-name="{{ record.id_medicine.medicine_name }}" data-expiration-date="{{ record.expiration_date }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                        <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
+                        </svg> Удалить</a></td>
+                </tr>
+            {% endfor %}
+          {% endif %}
+            <tr>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Modal -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Внимание</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Вы уверены, что хотите удалить из аптечки лекарство <span id="medicineNamePlaceholder"></span>?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Нет</button>
+                        <a id="deleteRecordButton" href="#" class="btn btn-danger">Да</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            $('#deleteModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var recordId = button.data('record-id'); // Extract value from data-* attributes
+                var medicineName = "\"" + button.data('medicine-name') + "\", срок годности: " + button.data('expiration-date');
+                var deleteButton = $('#deleteRecordButton');
+                var medicineNamePlaceholder = $('#medicineNamePlaceholder');
+                deleteButton.attr('href', '/delete_firstaidkit_record/' + recordId); // Set the href attribute for the delete button
+                medicineNamePlaceholder.text(medicineName); // Set the medicine name in the modal body
+            });
+        </script>
+
+    {% endif %}
+
+{% endblock %}

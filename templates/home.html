@@ -1,43 +1,4 @@
 {% extends 'base.html' %}
 {% block content %}
-
-    {% if user.is_authenticated %}
-
-        <h1>Аптечка</h1>
-
-        <div class="d-flex justify-content-end">
-            <a href="{% url 'add_firstaidkit_record' %}" class="btn btn-success">Добавить новую запись</a>
-            <br/>
-        </div>
-
-        <table class="table table-hover">
-          <thead class="table-dark">
-          <tr>
-              <th scope="col">№</th>
-              <th scope="col">Название лекарства</th>
-              <th scope="col">Срок годности</th>
-          </tr>
-          </thead>
-          <tbody>
-          {% if first_aid_kit %}
-            {% for record in first_aid_kit %}
-                <tr>
-                    <td><a href="{% url 'firstaidkit_record' record.id_firstaidkit %}">{{ record.id_firstaidkit }}</a></td>
-                    <td><a href="{% url 'medicine' record.id_medicine.id_medicine %}">{{ record.id_medicine.medicine_name }}</a></td>
-                    <td>{{ record.expiration_date }}</td>
-                </tr>
-            {% endfor %}
-          {% endif %}
-            <tr>
-            </tr>
-          </tbody>
-        </table>
-
-    {% else %}
-
-        <div class="col-md-6 offset-md-3">
-            <h2>Информация недоступна незарегистрированным пользователям</h2>
-        </div>
-    {% endif %}
-
+    <h2>Лекарства</h2>
 {% endblock %}

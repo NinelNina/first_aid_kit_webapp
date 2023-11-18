@@ -1,17 +1,28 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .forms import SignUpForm
+from django.urls import reverse
+
+from .forms import SignUpForm, AddFirstAidKitRecord
 from .models import Medicine
 from .models import Firstaidkit
 
 
 def home(request):
-    first_aid_kit = Firstaidkit.objects.all()
+    # if request.user.is_authenticated:
+    #     first_aid_kit = Firstaidkit.objects.filter(user_id=request.user.id)
+    #     return render(request, 'home.html', {'first_aid_kit': first_aid_kit})
+    # else:
+    return render(request, 'home.html', {})
+
+
+def firstaidkit(request):
     if request.user.is_authenticated:
-        return render(request, 'home.html', {'first_aid_kit': first_aid_kit})
+        first_aid_kit = Firstaidkit.objects.filter(user_id=request.user.id)
+        return render(request, 'firstaikit.html', {'first_aid_kit': first_aid_kit})
     else:
-        return render(request, 'home.html', {})
+        messages.success(request, "Страница доступна только авторизованным пользователям.")
+        return render(request, 'login.html', {})
 
 
 def login_user(request):
@@ -55,16 +66,8 @@ def register_user(request):
 
 def medicine_description(request, pk):
     medicine = Medicine.objects.get(id_medicine=pk)
-    return render(request, 'medicine.html', {'medicine': medicine})
-
-
-def firstaidkit_record(request, pk):
-    if request.user.is_authenticated:
-        firstaidkit_record = Firstaidkit.objects.get(id_firstaidkit=pk)
-        return render(request, 'firstaikid_record.html', {'firstaidkit_record': firstaidkit_record})
-    else:
-        messages.success(request, "Страница доступна только для авторизованных пользователей.")
-        return render(request, 'login.html', {})
+    previous_url = request.META.get('HTTP_REFERER', reverse('home'))
+    return render(request, 'medicine.html', {'medicine': medicine, 'previous_url': previous_url})
 
 
 def delete_firstaidkit_record(request, pk):
@@ -72,10 +75,37 @@ def delete_firstaidkit_record(request, pk):
         delete_it = Firstaidkit.objects.get(id_firstaidkit=pk)
         delete_it.delete()
         messages.success(request,"Запись успешно удалена.")
-        return redirect('home')
+        return redirect('firstaidkit')
     else:
-        messages.success(request, "Страница доступна только для авторизованных пользователей.")
+        messages.success(request, "Страница доступна только авторизованным пользователям.")
         return render(request, 'login.html', {})
 
+
 def add_firstaidkit_record(request):
-    return render(request, 'add_firstaidkit_record.html', {})
+    form = AddFirstAidKitRecord(request.POST or None)
+    if request.user.is_authenticated:
+        if request.method == "POST":
+            if form.is_valid():
+                add_firstaidkit_record = form.save(commit=False)
+                add_firstaidkit_record.user_id = request.user.id
+                add_firstaidkit_record = form.save()
+                messages.success(request, "Запись добавлена.")
+                return redirect('firstaidkit')
+        return render(request, 'add_firstaidkit_record.html', {'form': form})
+    else:
+        messages.success(request, "Страница доступна только авторизованным пользователям.")
+        return redirect('login')
+
+
+def update_firstaidkit_record(request, pk):
+    if request.user.is_authenticated:
+        current_record = Firstaidkit.objects.get(id_firstaidkit=pk)
+        form = AddFirstAidKitRecord(request.POST or None, instance=current_record)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Запись обновлена.")
+            return redirect('firstaidkit')
+        return render(request, 'update_firstaidkit_record.html', {'form': form})
+    else:
+        messages.success(request, "Страница доступна только авторизованным пользователям.")
+        return redirect('login')

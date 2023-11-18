@@ -2,6 +2,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django import forms
 from .models import Firstaidkit
+from .models import Medicine
 
 
 class SignUpForm(UserCreationForm):
@@ -32,6 +33,33 @@ class SignUpForm(UserCreationForm):
 
 
 class AddFirstAidKitRecord(forms.ModelForm):
-    medicine_name = forms.CharField(required=True, widget=forms.TextInput(attrs={'placeholder': 'Название лекарства', 'class': 'form-control'}), label="")
-    #medicine_name = forms.ModelChoiceField(Medicine.objects.get().medicine_name.)
-    expiration_date = forms.DateField(required=True, widget=forms.DateInput(attrs={'placeholder': 'Срок годности', 'class': 'form-control'}), label="")
+    expiration_date = forms.DateField(
+        required=True,
+        widget=forms.widgets.DateInput(attrs={"placeholder": "Срок годности", "class": "form-control"}),
+        label=""
+    )
+
+    medicine = Medicine.objects.all().order_by('medicine_name')
+
+    id_medicine = forms.ModelChoiceField(
+        queryset=Medicine.objects.all(),
+        empty_label='Выберите лекарство',
+        to_field_name='medicine_name',
+        widget=forms.Select(attrs={"class": "form-control"}),
+        label=""
+    )
+
+    class Meta:
+        model = Firstaidkit
+        fields = ('id_medicine', 'expiration_date')
+
+    def __init__(self, *args, **kwargs):
+        super(AddFirstAidKitRecord, self).__init__(*args, **kwargs)
+
+        self.fields['id_medicine'].widget.attrs['class'] = 'form-control'
+        self.fields['id_medicine'].widget.attrs['placeholder'] = 'Название лекарства'
+        self.fields['id_medicine'].label = ''
+
+        self.fields['expiration_date'].widget.attrs['class'] = 'form-control'
+        self.fields['expiration_date'].widget.attrs['placeholder'] = 'Срок годности'
+        self.fields['expiration_date'].label = ''

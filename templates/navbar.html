@@ -1,5 +1,7 @@
 <nav class="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
   <div class="container-fluid">
+  {% load static %}
+    <a class="navbar-brand" href="{%  url 'home' %}"><img src="{% static 'images/favicon.png' %}" class="rounded" alt="..."></a>
     <a class="navbar-brand" href="{%  url 'home' %}">Твоя АПТЕЧКА</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -11,6 +13,9 @@
 
             <li class="nav-item">
               <a class="nav-link" href="{% url 'logout' %}">Выйти</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'firstaidkit' %}">Аптечка</a>
             </li>
 
           {% else %}

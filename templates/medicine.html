@@ -5,5 +5,7 @@
     <br/>
     {{ medicine.medicine_descr | safe }}
     <br/>
-    <a href="{% url 'home' %}" class="btn btn-secondary">Назад</a>
+    <a href="{{ previous_url }}" class="btn btn-secondary">Назад</a>
+    <br/>
+    <br/>
 {% endblock %}
