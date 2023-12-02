@@ -30,6 +30,9 @@ class Disease(models.Model):
     id_disease = models.CharField(primary_key=True, max_length=10)
     disease_name = models.CharField(max_length=200)
 
+    def __str__(self):
+        return self.id_disease + " " + self.disease_name
+
     class Meta:
         managed = True
         db_table = 'disease'
@@ -63,6 +66,9 @@ class MedicationUse(models.Model):
     id_medicine = models.OneToOneField('Medicine', models.CASCADE, db_column='id_medicine', primary_key=True)  # The composite primary key (id_medicine, id_disease) found, that is not supported. The first column is selected.
     id_disease = models.ForeignKey(Disease, models.CASCADE, db_column='id_disease')
 
+    def __str__(self):
+        return "MedicationUse id=" + str(self.id_medicine.id_medicine) + "-" + self.id_disease.id_disease
+
     class Meta:
         managed = True
         db_table = 'medication_use'
@@ -85,6 +91,9 @@ class Medicine(models.Model):
 class Symptom(models.Model):
     id_symptom = models.AutoField(primary_key=True)
     symptom_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.symptom_name
 
     class Meta:
         managed = True

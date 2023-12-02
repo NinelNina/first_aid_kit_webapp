@@ -1,25 +1,53 @@
+from dal import autocomplete
+from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.urls import reverse
 
 from .forms import SignUpForm, AddFirstAidKitRecord
-from .models import Medicine
+from .models import Medicine, MedicationUse, Disease, DiseaseCatalog, Symptom
 from .models import Firstaidkit
 
 
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+
+
 def home(request):
-    # if request.user.is_authenticated:
-    #     first_aid_kit = Firstaidkit.objects.filter(user_id=request.user.id)
-    #     return render(request, 'home.html', {'first_aid_kit': first_aid_kit})
-    # else:
     return render(request, 'home.html', {})
+
+
+def medicine_list(request):
+    medications = Medicine.objects.select_related().all().order_by('medicine_name')
+    data = []
+
+    for medication in medications:
+        medication_uses = MedicationUse.objects.filter(id_medicine=medication.id_medicine)
+        diseases = medication_uses.values('id_disease', 'id_disease__disease_name')
+
+        data.append({
+            'medication': medication,
+            'diseases': diseases
+        })
+
+    objects_at_page = 20
+    paginator = Paginator(data, objects_at_page)
+
+    page = request.GET.get('page')
+    try:
+        data = paginator.page(page)
+    except PageNotAnInteger:
+        data = paginator.page(1)
+    except EmptyPage:
+        data = paginator.page(paginator.num_pages)
+
+    return render(request, 'medicine_list.html', {'data': data, 'medicine_count': medications.count()})
 
 
 def firstaidkit(request):
     if request.user.is_authenticated:
         first_aid_kit = Firstaidkit.objects.filter(user_id=request.user.id)
-        return render(request, 'firstaikit.html', {'first_aid_kit': first_aid_kit})
+        return render(request, 'firstaidkit.html', {'first_aid_kit': first_aid_kit})
     else:
         messages.success(request, "Страница доступна только авторизованным пользователям.")
         return render(request, 'login.html', {})
@@ -66,8 +94,22 @@ def register_user(request):
 
 def medicine_description(request, pk):
     medicine = Medicine.objects.get(id_medicine=pk)
+    medication_use = MedicationUse.objects.filter(id_medicine=pk).order_by('id_disease__id_disease')
+    diseases = medication_use.values('id_disease', 'id_disease__disease_name')
+
     previous_url = request.META.get('HTTP_REFERER', reverse('home'))
-    return render(request, 'medicine.html', {'medicine': medicine, 'previous_url': previous_url})
+    return render(request, 'medicine.html', {'medicine': medicine, 'diseases':diseases, 'previous_url': previous_url})
+
+
+def disease_description(request, pk):
+    disease = Disease.objects.get(id_disease=pk)
+    medications = MedicationUse.objects.filter(id_disease=pk)
+    medications = medications.values('id_medicine', 'id_medicine__medicine_name').order_by('id_medicine__medicine_name')
+    symptoms = DiseaseCatalog.objects.filter(id_disease=pk).order_by('id_symptom__symptom_name')
+    symptoms = symptoms.values('id_disease', 'id_symptom__symptom_name')
+
+    previous_url = request.META.get('HTTP_REFERER', reverse('home'))
+    return render(request, 'disease.html', {'disease': disease, 'medications': medications, 'symptoms': symptoms, 'previous_url': previous_url})
 
 
 def delete_firstaidkit_record(request, pk):
@@ -82,8 +124,8 @@ def delete_firstaidkit_record(request, pk):
 
 
 def add_firstaidkit_record(request):
-    form = AddFirstAidKitRecord(request.POST or None)
     if request.user.is_authenticated:
+        form = AddFirstAidKitRecord(request.POST or None)
         if request.method == "POST":
             if form.is_valid():
                 add_firstaidkit_record = form.save(commit=False)
@@ -100,12 +142,68 @@ def add_firstaidkit_record(request):
 def update_firstaidkit_record(request, pk):
     if request.user.is_authenticated:
         current_record = Firstaidkit.objects.get(id_firstaidkit=pk)
-        form = AddFirstAidKitRecord(request.POST or None, instance=current_record)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Запись обновлена.")
-            return redirect('firstaidkit')
+        form = AddFirstAidKitRecord(instance=current_record)
+        if request.method == 'POST':
+            form = AddFirstAidKitRecord(request.POST, instance=current_record)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Запись обновлена.")
+                return redirect('firstaidkit')
         return render(request, 'update_firstaidkit_record.html', {'form': form})
     else:
         messages.success(request, "Страница доступна только авторизованным пользователям.")
         return redirect('login')
+
+
+def diseases_list(request):
+    diseases = Disease.objects.select_related().all().order_by('id_disease')
+    data = []
+
+    for disease in diseases:
+        medication_uses = MedicationUse.objects.filter(id_disease=disease.id_disease)
+        medications = medication_uses.values('id_medicine', 'id_medicine__medicine_name').order_by('id_medicine__medicine_name')
+
+        data.append({
+            'disease': disease,
+            'medications': medications
+        })
+
+    objects_at_page = 20
+    paginator = Paginator(data, objects_at_page)
+
+    page = request.GET.get('page')
+    try:
+        data = paginator.page(page)
+    except PageNotAnInteger:
+        data = paginator.page(1)
+    except EmptyPage:
+        data = paginator.page(paginator.num_pages)
+
+    return render(request, 'disease_list.html', {'data': data, 'diseases_count': diseases.count()})
+
+
+def symptoms_list(request):
+    symptoms = Symptom.objects.select_related().all().order_by('symptom_name')
+    data = []
+
+    for symptom in symptoms:
+        disease_catalog = DiseaseCatalog.objects.filter(id_symptom=symptom.id_symptom)
+        diseases = disease_catalog.values('id_disease', 'id_disease__disease_name').order_by('id_disease')
+
+        data.append({
+            'symptom': symptom,
+            'diseases': diseases
+        })
+
+    objects_at_page = 20
+    paginator = Paginator(data, objects_at_page)
+
+    page = request.GET.get('page')
+    try:
+        data = paginator.page(page)
+    except PageNotAnInteger:
+        data = paginator.page(1)
+    except EmptyPage:
+        data = paginator.page(paginator.num_pages)
+
+    return render(request, 'symptom_list.html', {'data': data})

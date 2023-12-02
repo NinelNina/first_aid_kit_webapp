@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="card text-bg-light">
+        <div class="card-body">
+            <h1 class="card-title text-center">{{ disease.disease_name }}</h1>
+            <br/>
+            {% if symptoms %}
+                <h3 class="card-subtitle mb-2 text-body-secondary">Симптомы:</h3>
+                {% for symptom in symptoms %}
+                    <li>
+                        <p class="card-text">{{ symptom.id_symptom__symptom_name }}</p>
+                    </li>
+                {% endfor %}
+                <br/>
+            {% endif %}
+            <h3 class="card-subtitle mb-2 text-body-secondary">Для лечения используют следующие лекарства:</h3>
+            {% for medicine in medications %}
+                <li>
+                    <a class="card-text" href="{% url 'medicine' medicine.id_medicine %}"
+                       class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">
+                        {{ medicine.id_medicine__medicine_name }}
+                    </a>
+                </li>
+            {% endfor %}
+        </div>
+        <br/>
+    </div>
+    <br/>
+    <br/>
+    <a href="{{ previous_url }}" class="btn btn-secondary">Назад</a>
+    <br/>
+    <br/>
+{% endblock %}

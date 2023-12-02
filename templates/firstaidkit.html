@@ -27,7 +27,8 @@
             {% for record in first_aid_kit %}
                 <tr>
                     <td><a href="{% url 'medicine' record.id_medicine.id_medicine %}" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">{{ record.id_medicine.medicine_name }}</a></td>
-                    <td>{{ record.expiration_date }}</td>
+
+                    <td>{{ record.expiration_date|date:"m.Y" }}</td>
 
                     <td><a href="{% url 'update_firstaidkit_record' record.id_firstaidkit %}" class="btn btn-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
