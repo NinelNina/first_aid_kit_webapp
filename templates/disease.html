@@ -7,8 +7,8 @@
             {% if symptoms %}
                 <h3 class="card-subtitle mb-2 text-body-secondary">Симптомы:</h3>
                 {% for symptom in symptoms %}
-                    <li>
-                        <p class="card-text">{{ symptom.id_symptom__symptom_name }}</p>
+                    <li class="card-text">
+                        {{ symptom.id_symptom__symptom_name }}
                     </li>
                 {% endfor %}
                 <br/>

@@ -1,4 +1,27 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-    <p>Твоя аптечка  - это онлайн-ресурс, с помощью которого ты всегда сможешь узнать, какие лекарства у тебя есть.</p>
+    <h1 class="text-center">Твоя АПТЕЧКА<small class="text-body-secondary"> - это онлайн-ресурс, с помощью которого ты
+        всегда сможешь:</small></h1>
+    <br/>
+    <ul>
+        <li><h5>узнать, какие лекарства у тебя есть;</h5></li>
+        <li><h5>найти лекарство в твоей аптечке по поставленному врачом диагнозу;</h5></li>
+        <li><h5>узнать, что у лекарства из твоей аптечки вышел срок годности;</h5></li>
+        <li><h5>узнать предполагаемый диагноз по симптомам.</h5></li>
+    </ul>
+
+    <br/>
+    <img src="{% static 'images\fistaidkit_screenshot.jpg' %}" style="width: 600px; height: 420px;"
+         class="border border-success rounded mx-auto d-block" alt="Screenshot">
+    <br/>
+
+    <h1 class="text-center">Присоединяйся уже сейчас!</h1>
+    <br/>
+    <div class="text-center">
+        <a type="button" href="{% url 'login' %}" class="btn btn-success btn-lg">Войти</a>
+        или
+        <a type="button" href="{% url 'register' %}" class="btn btn-primary btn-lg">Зарегистрироваться</a>
+    </div>
+    <br/>
 {% endblock %}

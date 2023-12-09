@@ -1,20 +1,22 @@
-from dal import autocomplete
-from django.core.paginator import Paginator
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.urls import reverse
+from django.utils import timezone
 
-from .forms import SignUpForm, AddFirstAidKitRecord
+from .forms import SignUpForm, AddFirstAidKitRecord, DiseaseSearchForm
 from .models import Medicine, MedicationUse, Disease, DiseaseCatalog, Symptom
 from .models import Firstaidkit
-
 
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 
 def home(request):
-    return render(request, 'home.html', {})
+    if request.user.is_authenticated:
+        return redirect('firstaidkit')
+    else:
+        return render(request, 'home.html', {})
 
 
 def medicine_list(request):
@@ -47,6 +49,21 @@ def medicine_list(request):
 def firstaidkit(request):
     if request.user.is_authenticated:
         first_aid_kit = Firstaidkit.objects.filter(user_id=request.user.id)
+
+        current_date = timezone.now().date()
+        for record in first_aid_kit:
+            record.is_expired = record.expiration_date.year <= current_date.year and record.expiration_date.month <= current_date.month
+
+        objects_at_page = 20
+        if len(first_aid_kit) > objects_at_page:
+            paginator = Paginator(first_aid_kit, objects_at_page)
+            page = request.GET.get('page')
+            try:
+                first_aid_kit = paginator.page(page)
+            except PageNotAnInteger:
+                first_aid_kit = paginator.page(1)
+            except EmptyPage:
+                first_aid_kit = paginator.page(paginator.num_pages)
         return render(request, 'firstaidkit.html', {'first_aid_kit': first_aid_kit})
     else:
         messages.success(request, "Страница доступна только авторизованным пользователям.")
@@ -71,7 +88,7 @@ def login_user(request):
 
 def logout_user(request):
     logout(request)
-    messages.success(request,"Вы вышли.")
+    messages.success(request, "Вы вышли.")
     return redirect('home')
 
 
@@ -98,7 +115,7 @@ def medicine_description(request, pk):
     diseases = medication_use.values('id_disease', 'id_disease__disease_name')
 
     previous_url = request.META.get('HTTP_REFERER', reverse('home'))
-    return render(request, 'medicine.html', {'medicine': medicine, 'diseases':diseases, 'previous_url': previous_url})
+    return render(request, 'medicine.html', {'medicine': medicine, 'diseases': diseases, 'previous_url': previous_url})
 
 
 def disease_description(request, pk):
@@ -109,14 +126,15 @@ def disease_description(request, pk):
     symptoms = symptoms.values('id_disease', 'id_symptom__symptom_name')
 
     previous_url = request.META.get('HTTP_REFERER', reverse('home'))
-    return render(request, 'disease.html', {'disease': disease, 'medications': medications, 'symptoms': symptoms, 'previous_url': previous_url})
+    return render(request, 'disease.html',
+                  {'disease': disease, 'medications': medications, 'symptoms': symptoms, 'previous_url': previous_url})
 
 
 def delete_firstaidkit_record(request, pk):
     if request.user.is_authenticated:
         delete_it = Firstaidkit.objects.get(id_firstaidkit=pk)
         delete_it.delete()
-        messages.success(request,"Запись успешно удалена.")
+        messages.success(request, "Запись успешно удалена.")
         return redirect('firstaidkit')
     else:
         messages.success(request, "Страница доступна только авторизованным пользователям.")
@@ -161,7 +179,8 @@ def diseases_list(request):
 
     for disease in diseases:
         medication_uses = MedicationUse.objects.filter(id_disease=disease.id_disease)
-        medications = medication_uses.values('id_medicine', 'id_medicine__medicine_name').order_by('id_medicine__medicine_name')
+        medications = medication_uses.values('id_medicine', 'id_medicine__medicine_name').order_by(
+            'id_medicine__medicine_name')
 
         data.append({
             'disease': disease,
@@ -207,3 +226,101 @@ def symptoms_list(request):
         data = paginator.page(paginator.num_pages)
 
     return render(request, 'symptom_list.html', {'data': data})
+
+
+def search_medicine(request):
+    if request.method == 'POST':
+        searched = request.POST['searched']
+        if searched or str(searched) != '':
+            data = Medicine.objects.filter(medicine_name__icontains=searched).order_by('medicine_name')
+            objects_at_page = 20
+            if len(data) > objects_at_page:
+                paginator = Paginator(data, objects_at_page)
+                page = request.GET.get('page')
+                try:
+                    data = paginator.page(page)
+                except PageNotAnInteger:
+                    data = paginator.page(1)
+                except EmptyPage:
+                    data = paginator.page(paginator.num_pages)
+            return render(request, 'search_medicine.html', {'searched': searched, 'data': data})
+    else:
+        return redirect('medicine_list')
+
+
+def search_disease(request):
+    if request.method == 'POST':
+        searched = request.POST['searched']
+        if searched or str(searched) != '':
+            data = Disease.objects.filter(disease_name__icontains=searched).order_by('id_disease')
+            objects_at_page = 20
+            if len(data) > objects_at_page:
+                paginator = Paginator(data, objects_at_page)
+                page = request.GET.get('page')
+                try:
+                    data = paginator.page(page)
+                except PageNotAnInteger:
+                    data = paginator.page(1)
+                except EmptyPage:
+                    data = paginator.page(paginator.num_pages)
+            return render(request, 'search_disease.html', {'searched': searched, 'data': data})
+    else:
+        return redirect('diseases_list')
+
+
+def search_firstaidkit(request):
+    if request.user.is_authenticated:
+        if request.method == 'POST':
+            searched = request.POST['searched']
+            if searched or str(searched) != '':
+                first_aid_kit = Firstaidkit.objects.filter(user_id=request.user.id)
+                disease_ids = MedicationUse.objects.filter(id_disease__disease_name__icontains=searched).values_list(
+                    'id_disease', flat=True).distinct()
+                diseases = Disease.objects.filter(id_disease__in=disease_ids)
+                medication_use_ids = MedicationUse.objects.filter(
+                    id_disease__disease_name__icontains=searched).values_list('id_medicine', flat=True)
+                data = first_aid_kit.filter(id_medicine__in=medication_use_ids)
+
+                current_date = timezone.now().date()
+                for record in data:
+                    record.is_expired = record.expiration_date.year <= current_date.year and record.expiration_date.month <= current_date.month
+
+                objects_at_page = 20
+                if len(data) > objects_at_page:
+                    paginator = Paginator(data, objects_at_page)
+                    page = request.GET.get('page')
+                    try:
+                        data = paginator.page(page)
+                    except PageNotAnInteger:
+                        data = paginator.page(1)
+                    except EmptyPage:
+                        data = paginator.page(paginator.num_pages)
+                return render(request, 'search_firstaidkit.html',
+                              {'searched': searched, 'data': data, 'diseases': diseases})
+        else:
+            return redirect('firstaidkit')
+    else:
+        messages.success(request, "Страница доступна только авторизованным пользователям.")
+        return redirect('login')
+
+
+def search_disease_by_symptom(request):
+    form = DiseaseSearchForm()
+
+    if request.method == 'POST':
+        form = DiseaseSearchForm(request.POST)
+        if form.is_valid():
+            symptoms = form.cleaned_data['symptoms']
+
+            q_objects = Q()
+            for symptom in symptoms:
+                q_objects &= Q(
+                    id_disease__in=DiseaseCatalog.objects.filter(id_symptom=symptom).values_list('id_disease',
+                                                                                                 flat=True))
+
+            diseases = Disease.objects.filter(q_objects)
+
+            return render(request, 'search_disease_by_symptom.html',
+                          {'diseases': diseases, 'selected_symptoms': symptoms, 'form': form})
+
+    return render(request, 'search_disease_by_symptom.html', {'form': form})

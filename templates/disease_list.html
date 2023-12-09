@@ -1,5 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
+    <form class="d-flex justify-content-start" method=POST action="{% url 'disease_search' %}">
+        {% csrf_token %}
+        <input class="form-control me-2 border border-dark" type="search" placeholder="Поиск заболеваний" aria-label="Search"
+               name="searched">
+        <button class="btn btn-outline-success" type="submit">Поиск</button>
+    </form>
+    <br/>
     <h2 class="text-center">Заболевания
         <small class="text-body-secondary">Всего: {{ diseases_count }}</small>
     </h2>

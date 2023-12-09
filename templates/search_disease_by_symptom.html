@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2 class="text-center">Поиск заболевания по симптомам</h2>
+    <br/>
+    <form method="POST" action="{% url 'disease_by_symptom_search' %}" class="form-inline">
+        {% csrf_token %}
+        <div class="form-group">
+            <h3 class="text-center">{{ form.symptoms.label_tag }}</h3>
+            <br/>
+            <input type="text" id="symptomSearchInput" class="form-control border border-dark mb-1"
+                   placeholder="Поиск симптомов">
+            <ul id="symptomList" class="list-group list-group-flush overflow-auto border border-dark"
+                style="max-height: 30vh;">
+                {% for widget in form.symptoms %}
+                    <li class="list-group-item border border-dark">
+                        <div class="form-check">
+                            <div class="fs-6 widget">{{ widget }} {{ widget.label_tag }}</div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+            <input type="hidden" name="symptom_search" id="selectedSymptoms" value="">
+        </div>
+        <br/>
+        <button type="submit" class="btn btn-success btn-lg">Искать</button>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const symptomSearchInput = document.getElementById('symptomSearchInput');
+            const symptomList = document.getElementById('symptomList');
+            const selectedSymptomsInput = document.getElementById('selectedSymptoms');
+
+            symptomSearchInput.addEventListener('input', function () {
+                const searchTerm = symptomSearchInput.value.toLowerCase();
+
+                const symptoms = document.querySelectorAll('#symptomList li');
+                symptoms.forEach(function (symptom) {
+                    const label = symptom.querySelector('.widget').textContent.toLowerCase();
+                    if (label.includes(searchTerm)) {
+                        symptom.style.display = 'block';
+                    } else {
+                        symptom.style.display = 'none';
+                    }
+                });
+            });
+
+            symptomList.addEventListener('click', function (event) {
+                if (event.target.tagName === 'input' && event.target.type === 'checkbox') {
+                    updateSelectedSymptoms();
+                }
+            });
+
+            function updateSelectedSymptoms() {
+                const selectedSymptoms = Array.from(symptomList.querySelectorAll('input:checked')).map(function (input) {
+                    return input.value;
+                });
+                selectedSymptomsInput.value = selectedSymptoms.join(',');
+            }
+        });
+    </script>
+
+    <br/>
+    {% if diseases %}
+        <h2 class="text-center">Результаты поиска:</h2>
+        <h5 class="text-body-secondary">Найдено: {{ diseases|length }}</h5>
+        <br/>
+        <ol class="list-group">
+            {% for disease in diseases %}
+                <li class="list-group-item align-items-start border-dark">
+                    <a class="ms-2 text-left">
+                        <a href="{% url 'disease' disease.id_disease %}"
+                           class="fw-bold link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">
+                            {{ disease.id_disease }} {{ disease.disease_name }}
+                        </a>
+                    </a>
+                </li>
+            {% endfor %}
+        </ol>
+        <br/>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% if searched %}
+        <form class="d-flex justify-content-start" method=POST action="{% url 'medicine_search' %}">
+            {% csrf_token %}
+            <input class="form-control me-2" type="search" placeholder="Поиск лекарств" aria-label="Search"
+                   name="searched">
+            <button class="btn btn-outline-success" type="submit">Поиск</button>
+        </form>
+        <br/>
+        <h2 class="text-center">Результаты поиска:</h2>
+        <h4>Вы искали: "{{ searched }}".
+            <small class="text-body-secondary">Найдено: {{ data|length }}</small>
+        </h4>
+        <br/>
+        {% if data %}
+            <ol class="list-group">
+                {% for item in data %}
+                    <li class="list-group-item align-items-start border-dark">
+                        <a class="ms-2 text-left">
+                            <a href="{% url 'medicine' item.id_medicine %}"
+                               class="fw-bold link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">
+                                {{ item.medicine_name }}
+                            </a>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ol>
+        {% endif %}
+        {% if paginator %}
+            <div class="d-flex justify-content-center">
+                {% include "pagination.html" %}
+            </div>
+        {% endif %}
+    {% endif %}
+{% endblock %}

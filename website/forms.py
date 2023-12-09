@@ -1,7 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django import forms
-from .models import Firstaidkit, MedicationUse, Disease, DiseaseCatalog
+from .models import Firstaidkit, MedicationUse, Disease, DiseaseCatalog, Symptom
 from .models import Medicine
 
 
@@ -98,3 +98,11 @@ class DiseaseCatalogInlineForm(forms.ModelForm):
     class Meta:
         model = DiseaseCatalog
         fields = ['id_symptom']
+
+
+class DiseaseSearchForm(forms.Form):
+    symptoms = forms.ModelMultipleChoiceField(
+        queryset=Symptom.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        label='Выберите симптомы',
+    )

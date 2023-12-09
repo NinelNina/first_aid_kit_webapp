@@ -1,8 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
+    <form class="d-flex justify-content-start" method=POST action="{% url 'medicine_search' %}">
+        {% csrf_token %}
+        <input class="form-control me-2 border border-dark" type="search" placeholder="Поиск лекарств" aria-label="Search" name="searched">
+        <button class="btn btn-outline-success" type="submit">Поиск</button>
+    </form>
+    <br/>
     <h2 class="text-center">Лекарства
         <small class="text-body-secondary">Всего: {{ medicine_count }}</small>
     </h2>
+    <br/>
     <div class="d-flex justify-content-end">
         {% include "pagination.html" %}
     </div>
